@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-ardia-dark text-gray-100 antialiased;
+}
+
+.ardia-gradient {
+  background: radial-gradient(circle at top, #1f6feb 0, #020817 45%, #000 100%);
+}
+
+.card {
+  @apply bg-slate-900/70 border border-slate-800 rounded-2xl p-6 shadow-xl shadow-black/40;
+}
