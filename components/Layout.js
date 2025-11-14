@@ -1,7 +1,7 @@
 // components/Layout.js
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -20,13 +20,27 @@ const dropdownItems = [
 
 export default function Layout({ children }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  // Close menu when clicking anywhere outside Solutions Hub area
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col ardia-gradient">
       {/* ================= HEADER ================= */}
       <header className="border-b border-slate-800/80 bg-slate-950/70 backdrop-blur">
         <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between gap-6">
-          
           {/* BRAND */}
           <Link href="/" className="flex items-center gap-4">
             <div className="relative h-12 w-12 md:h-14 md:w-14 rounded-2xl overflow-hidden shadow-lg shadow-ardia-blue/40 bg-slate-900">
@@ -51,7 +65,6 @@ export default function Layout({ children }) {
 
           {/* ================= NAVIGATION ================= */}
           <nav className="hidden md:flex items-center gap-6 text-sm">
-            
             {/* HOME */}
             <Link
               href="/"
@@ -60,10 +73,11 @@ export default function Layout({ children }) {
               Home
             </Link>
 
-            {/* SOLUTIONS HUB - STICKY OPEN DROPDOWN */}
+            {/* SOLUTIONS HUB DROPDOWN */}
             <div
+              ref={menuRef}
               className="relative"
-              onMouseEnter={() => setMenuOpen(true)}   // hover opens
+              onMouseEnter={() => setMenuOpen(true)} // hover opens
             >
               <button
                 type="button"
@@ -92,16 +106,13 @@ export default function Layout({ children }) {
                 </div>
               )}
             </div>
-
           </nav>
         </div>
       </header>
 
       {/* ================= MAIN ================= */}
       <main className="flex-1">
-        <div className="mx-auto max-w-6xl px-4 py-10">
-          {children}
-        </div>
+        <div className="mx-auto max-w-6xl px-4 py-10">{children}</div>
       </main>
 
       {/* ================= FOOTER ================= */}
