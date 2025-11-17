@@ -15,6 +15,29 @@ export default function AIChatWidget() {
   const [documentText, setDocumentText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const quickPrompts = [
+    {
+      label: "Simple summary",
+      message:
+        "Please summarise this document in very simple language a non-medical person can understand. Give 3–5 key points.",
+    },
+    {
+      label: "Outline + sections",
+      message:
+        "Please outline this document as headings and bullet points. Start with a 2–3 sentence overview, then list the major sections in order.",
+    },
+    {
+      label: "Questions for my doctor",
+      message:
+        "Read this document and list 5–8 important questions I should ask my doctor at my next visit. Keep the language simple.",
+    },
+    {
+      label: "Risks & follow-up",
+      message:
+        "From this document, explain in simple language what potential risks or follow-up steps are mentioned. Make clear this is not medical advice.",
+    },
+  ];
+
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -24,25 +47,16 @@ export default function AIChatWidget() {
 
     reader.onload = () => {
       const text = typeof reader.result === "string" ? reader.result : "";
-      // basic text extraction; works best with .txt or docs exported to text
+      // Simple text extraction; works best with .txt or exports. PDFs will be messy but usable.
       setDocumentText(text.slice(0, 15000));
     };
 
-    // For PDFs this will give messy text but is still usable for a summary
+    // For PDFs this will read the raw text – still ok for high-level summaries.
     reader.readAsText(file);
   };
 
-  const sendMessage = async () => {
-    if (!input.trim()) return;
-
-    const newMessages = [
-      ...messages,
-      { role: "user", content: input.trim() },
-    ];
-    setMessages(newMessages);
-    setInput("");
+  const callAgent = async (newMessages) => {
     setIsLoading(true);
-
     try {
       const response = await fetch("/api/ai-agent", {
         method: "POST",
@@ -93,12 +107,30 @@ export default function AIChatWidget() {
         {
           role: "assistant",
           content:
-            "There was a network problem talking to the AI agent. Please check your connection and try again.",
+            "There was a network problem talking to the AI agent. Please check your connection or API key configuration and try again.",
         },
       ]);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const sendMessage = async () => {
+    if (!input.trim()) return;
+
+    const newMessages = [
+      ...messages,
+      { role: "user", content: input.trim() },
+    ];
+    setMessages(newMessages);
+    setInput("");
+    await callAgent(newMessages);
+  };
+
+  const sendQuickPrompt = async (promptMsg) => {
+    const newMessages = [...messages, { role: "user", content: promptMsg }];
+    setMessages(newMessages);
+    await callAgent(newMessages);
   };
 
   return (
@@ -161,7 +193,7 @@ export default function AIChatWidget() {
             )}
           </div>
 
-          {/* Upload + input */}
+          {/* Upload + input + quick prompts */}
           <div className="border-t border-slate-700 bg-slate-900/95 px-3 py-3 space-y-2">
             <div className="flex items-center gap-2">
               <label className="flex cursor-pointer items-center gap-2 rounded-full bg-slate-800 px-3 py-1 text-[11px] text-slate-200 hover:bg-slate-700">
@@ -182,6 +214,26 @@ export default function AIChatWidget() {
                 </span>
               )}
             </div>
+
+            {documentText && (
+              <div className="space-y-1">
+                <p className="text-[10px] text-slate-400">
+                  How can I help with this document?
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {quickPrompts.map((qp) => (
+                    <button
+                      key={qp.label}
+                      type="button"
+                      onClick={() => sendQuickPrompt(qp.message)}
+                      className="rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-600 px-2.5 py-1 text-[10px] text-slate-100"
+                    >
+                      {qp.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="flex items-center gap-2">
               <input

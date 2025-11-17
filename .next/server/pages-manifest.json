@@ -2,5 +2,7 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/": "pages/index.js"
+  "/architecture": "pages/architecture.js",
+  "/clinical-ai": "pages/clinical-ai.js",
+  "/diagnostics": "pages/diagnostics.js"
 }
